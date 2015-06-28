@@ -26,6 +26,7 @@
           jsonSpace = "  ";
         }
         response.setHeader("Content-Type", "application/json;charset=utf-8");
+        response.setHeader("DataServiceVersion", "1.0;");
         response.setHeader("Cache-Control", "no-cache");
         response.write(JSON.stringify(data, null, jsonSpace));
       };
