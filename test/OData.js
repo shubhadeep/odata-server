@@ -1,4 +1,7 @@
+/*globals module require */
 module.exports = (function () {
+  "use strict";
+
   var db = require("./db.js");
 
   return {
@@ -16,17 +19,19 @@ module.exports = (function () {
       return body;
     },
     addItemMetadata: function (item) {
-      item["__metadata"] = {
-        "uri": uri,
-        "type": type
+      item.__metadata = {
+        uri: uri,
+        type: type
       };
 
       return item;
     },
-    getUri: function (item, type) {
+    getUri: function (entityPath) {
       var serviceUrl = "/";
-      return "";
+      return serviceUrl + entityPath;
     },
-    loadServiceMetadata: function (metadataXml) {}
+    loadServiceMetadata: function (metadataXml) {
+      
+    }
   };
 })();
