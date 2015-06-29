@@ -40,7 +40,7 @@ module.exports = (function () {
           entitySetData = []; // Empty - in case not in DB
 
       if (entitySet in data) {
-        entitySetData = data[entitySet]
+        entitySetData = data[entitySet];
       }
       return this.getBody(entitySetData);
     },
@@ -66,7 +66,6 @@ module.exports = (function () {
     },
 
     loadServiceMetadata: function (metadataXml) {
-      
     }
   };
 })();

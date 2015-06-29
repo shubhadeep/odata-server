@@ -42,8 +42,6 @@
         }
 
         respondJson(data, response, statusCode);
-
-        console.log(request.url);
       },
 
       server = http.createServer(requestListener),
