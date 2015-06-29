@@ -24,6 +24,22 @@ module.exports = (function (edm) {
           navigationProperties: {
 
           }
+        },
+        Category: {
+          key: "ID",
+          properties: {
+            ID: {
+              type: Edm.Int32,
+              nullable: false
+            },
+            Name: {
+              type: Edm.String,
+              nullable: true
+            }
+          },
+          navigationProperties: {
+
+          }
         }
       },
       entityContainer: {
@@ -34,6 +50,9 @@ module.exports = (function (edm) {
         entitySets: {
           Products: {
             entityType: "ODataDemo.Product"
+          },
+          Categories: {
+            entityType: "ODataDemo.Category"
           }
         }
       }

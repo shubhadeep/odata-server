@@ -36,7 +36,13 @@ module.exports = (function () {
     },
 
     getEntitySet: function (entitySet) {
-      return this.getBody(db.getData()[entitySet]);
+      var data = db.getData(),
+          entitySetData = []; // Empty - in case not in DB
+
+      if (entitySet in data) {
+        entitySetData = data[entitySet]
+      }
+      return this.getBody(entitySetData);
     },
 
     getBody: function (items) {
