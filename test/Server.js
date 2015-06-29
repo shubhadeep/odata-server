@@ -5,26 +5,43 @@
   var http = require("http"),
       odata = require("./OData.js"),
 
-      respondJson = function (data, response, debug) {
+      respondJson = function (data, response, statusCode, debug) {
         var jsonSpace;
 
         if (debug) {
           jsonSpace = "  ";
         }
+
+        if (statusCode) {
+          response.statusCode = statusCode;
+        }
+
         response.setHeader("Content-Type", "application/json;charset=utf-8");
         response.setHeader("DataServiceVersion", "1.0;");
         response.setHeader("Cache-Control", "no-cache");
         response.write(JSON.stringify(data, null, jsonSpace));
       },
 
-      requestListener = function (request, response) {
-        var data = {};
-
-        if (request.url in odata.entitySets) {
-          data = odata.getEntitySet(odata.entitySets[request.url]);
+      getResourcePath = function (urlPath) {
+        if (urlPath.indexOf("/") === 0) {
+          return urlPath.split("/").splice(1).join("/");
         }
 
-        respondJson(data, response);
+        return urlPath;
+      },
+
+      requestListener = function (request, response) {
+        var data = {},
+            resourcePath = getResourcePath(request.url),
+            statusCode;
+
+        data = odata.get(resourcePath);
+
+        if (data.error) {
+          statusCode = 404;
+        }
+
+        respondJson(data, response, statusCode);
 
         console.log(request.url);
       },
