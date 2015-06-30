@@ -2,19 +2,69 @@
 module.exports = (function (edm) {
   "use strict";
 
-  var Edm = edm;
+  var Edm = edm,
+      schema = {
+        namespace: "ODataDemo",
+        entityTypes: {
+          Product: {
+            key: "ID",
+            properties: {
+              ID: {
+                type: Edm.Int32,
+                nullable: false
+              },
+              Name: {
+                type: Edm.String,
+                nullable: true
+              }
+            },
+            navigationProperties: {
+
+            }
+          },
+          Category: {
+            key: "ID",
+            properties: {
+              ID: {
+                type: Edm.Int32,
+                nullable: false
+              },
+              Name: {
+                type: Edm.String,
+                nullable: true
+              }
+            },
+            navigationProperties: {
+
+            }
+          }
+        },
+        entityContainer: {
+          name: "DemoService",
+          metadata: {
+            IsDefaultEntityContainer: true
+          },
+          entitySets: {
+            Products: {
+              entityType: "ODataDemo.Product"
+            },
+            Categories: {
+              entityType: "ODataDemo.Category"
+            }
+          }
+        }
+      };
 
   // TODO Write a converter for metadata.xml to this schema structure.
   return {
     getEntitySets: function () {
-      return this.schema.entityContainer.entitySets;
+      return schema.entityContainer.entitySets;
     },
     getEntitySetNames: function () {
-      return Object.keys(this.schema.entityContainer.entitySets);
+      return Object.keys(this.getEntitySets());
     },
     getTypeForEntitySet: function (entitySet) {
-      var schema = this.schema,
-          entitySets = schema.entityContainer.entitySets,
+      var entitySets = this.getEntitySets(),
           entityTypeKey = entitySets[entitySet].entityType,
           entityType = schema.entityTypes[this.removeNameSpace(entityTypeKey)];
 
@@ -23,61 +73,8 @@ module.exports = (function (edm) {
     },
     removeNameSpace: function (name) {
       return name.split(".").pop();
-    },
-    schema: {
-      namespace: "ODataDemo",
-      entityTypes: {
-        Product: {
-          key: "ID",
-          properties: {
-            ID: {
-              type: Edm.Int32,
-              nullable: false
-            },
-            Name: {
-              type: Edm.String,
-              nullable: true
-            }
-          },
-          navigationProperties: {
-
-          }
-        },
-        Category: {
-          key: "ID",
-          properties: {
-            ID: {
-              type: Edm.Int32,
-              nullable: false
-            },
-            Name: {
-              type: Edm.String,
-              nullable: true
-            }
-          },
-          navigationProperties: {
-
-          }
-        }
-      },
-      entityContainer: {
-        name: "DemoService",
-        metadata: {
-          IsDefaultEntityContainer: true
-        },
-        entitySets: {
-          Products: {
-            entityType: "ODataDemo.Product"
-          },
-          Categories: {
-            entityType: "ODataDemo.Category"
-          }
-        }
-      }
     }
-
   };
-
 })({
   Int32: "Int32",
   String: "String"
