@@ -3,7 +3,6 @@
   "use strict";
 
   var http = require("http"),
-      url = require("url"),
       odata = require("./OData.js"),
 
       addHeaders = function (response) {

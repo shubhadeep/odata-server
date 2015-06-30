@@ -16,8 +16,8 @@ module.exports = (function () {
     },
 
     get: function (requestUrl) {
-      var url_parts = url.parse(requestUrl, true),
-          resourcePath = this.getResourcePathFromUrl(url_parts.pathname),
+      var urlParts = url.parse(requestUrl, true),
+          resourcePath = this.getResourcePathFromUrl(urlParts.pathname),
           payload;
 
       if (resourcePath === "") {
@@ -40,7 +40,7 @@ module.exports = (function () {
       if (entitySet in data) {
         entitySetData = data[entitySet];
       }
-      
+
       entityType = edm.getTypeForEntitySet(entitySet);
       return this.getBody(entitySetData, entityType);
     },
