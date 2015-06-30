@@ -6,6 +6,24 @@ module.exports = (function (edm) {
 
   // TODO Write a converter for metadata.xml to this schema structure.
   return {
+    getEntitySets: function () {
+      return this.schema.entityContainer.entitySets;
+    },
+    getEntitySetNames: function () {
+      return Object.keys(this.schema.entityContainer.entitySets);
+    },
+    getTypeForEntitySet: function (entitySet) {
+      var schema = this.schema,
+          entitySets = schema.entityContainer.entitySets,
+          entityTypeKey = entitySets[entitySet].entityType,
+          entityType = schema.entityTypes[this.removeNameSpace(entityTypeKey)];
+
+      entityType.typeName = entityTypeKey;
+      return entityType;
+    },
+    removeNameSpace: function (name) {
+      return name.split(".").pop();
+    },
     schema: {
       namespace: "ODataDemo",
       entityTypes: {

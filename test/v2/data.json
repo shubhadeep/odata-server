@@ -1,3 +1,12 @@
 {
-  "Products": []
+  "Products": [
+    {
+      "ID": 0,
+      "Name": "Bread"
+    },
+    {
+      "ID": 1,
+      "Name": "Milk"
+    }
+  ]
 }

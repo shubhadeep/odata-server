@@ -3,44 +3,40 @@
   "use strict";
 
   var http = require("http"),
+      url = require("url"),
       odata = require("./OData.js"),
+
+      addHeaders = function (response) {
+        var responseHeaders = {
+              "Content-Type": "application/json;charset=utf-8",
+              "DataServiceVersion": "1.0;",
+              "Cache-Control": "no-cache"
+            };
+
+        Object.keys(responseHeaders).forEach(function (header) {
+          response.setHeader(header, responseHeaders[header]);
+        });
+      },
 
       respondJson = function (data, response, statusCode, debug) {
         var jsonSpace;
-
         if (debug) {
           jsonSpace = "  ";
         }
-
         if (statusCode) {
           response.statusCode = statusCode;
         }
-
-        response.setHeader("Content-Type", "application/json;charset=utf-8");
-        response.setHeader("DataServiceVersion", "1.0;");
-        response.setHeader("Cache-Control", "no-cache");
+        addHeaders(response);
         response.write(JSON.stringify(data, null, jsonSpace));
-      },
-
-      getResourcePath = function (urlPath) {
-        if (urlPath.indexOf("/") === 0) {
-          return urlPath.split("/").splice(1).join("/");
-        }
-
-        return urlPath;
+        response.end();
       },
 
       requestListener = function (request, response) {
-        var data = {},
-            resourcePath = getResourcePath(request.url),
+        var data = odata.get(request.url),
             statusCode;
-
-        data = odata.get(resourcePath);
-
         if (data.error) {
           statusCode = 404;
         }
-
         respondJson(data, response, statusCode);
       },
 

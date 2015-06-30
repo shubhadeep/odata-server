@@ -4,23 +4,57 @@ module.exports = (function () {
 
   var db = require("./db.js"),
       edm = require("./edm.js"),
-      entitySets = edm.schema.entityContainer.entitySets;
+      url = require("url");
 
   return {
-    entitySets: entitySets,
+    getResourcePathFromUrl: function (urlPath) {
+      if (urlPath.indexOf("/") === 0) {
+        return urlPath.split("/").splice(1).join("/");
+      }
 
-    get: function (resourcePath) {
+      return urlPath;
+    },
+
+    get: function (requestUrl) {
+      var url_parts = url.parse(requestUrl, true),
+          resourcePath = this.getResourcePathFromUrl(url_parts.pathname),
+          payload;
+
       if (resourcePath === "") {
-        return {
-          d: {
-            EntitySets: Object.keys(edm.schema.entityContainer.entitySets)
-          }
-        };
+        payload = this.getEntitySetsPayload();
       }
-      if (resourcePath in entitySets) {
-        return this.getEntitySet(resourcePath);
+      else if (resourcePath in edm.getEntitySets()) {
+        payload = this.getEntitySetPayload(resourcePath);
       }
-      return this.getNotFoundPayload(resourcePath);
+      else {
+        payload = this.getNotFoundPayload(resourcePath);
+      }
+      return payload;
+    },
+
+    getEntitySetPayload: function (entitySet) {
+      var data = db.getData(),
+          entitySetData = [], // Empty - in case not in DB
+          entityType;
+
+      if (entitySet in data) {
+        entitySetData = data[entitySet];
+      }
+      
+      entityType = edm.getTypeForEntitySet(entitySet);
+      return this.getBody(entitySetData, entityType);
+    },
+
+    removeNameSpace: function (name) {
+      return name.split(".").pop();
+    },
+
+    getEntitySetsPayload: function () {
+      return {
+        d: {
+          EntitySets: edm.getEntitySetNames()
+        }
+      };
     },
 
     getNotFoundPayload: function (resourcePath) {
@@ -35,37 +69,28 @@ module.exports = (function () {
       };
     },
 
-    getEntitySet: function (entitySet) {
-      var data = db.getData(),
-          entitySetData = []; // Empty - in case not in DB
+    getBody: function (items, type) {
+      var body = {},
+          metadataAdder = this.getMetadataAdder(type);
 
-      if (entitySet in data) {
-        entitySetData = data[entitySet];
-      }
-      return this.getBody(entitySetData);
-    },
-
-    getBody: function (items) {
-      var body = {};
-      body.d = items.map(this.addItemMetadata);
+      body.d = items.map(metadataAdder, this);
+      console.log(type);
       return body;
     },
 
-    addItemMetadata: function (item) {
-      item.__metadata = {
-        uri: uri,
-        type: type
+    getMetadataAdder: function (type) {
+      return function (item) {
+        var itemKey = item[type.key];
+        console.log(type.properties[type.key].type);
+        if (type.properties[type.key].type === "String") {
+          itemKey = "'" + itemKey + "'";
+        }
+        item.__metadata = {
+            uri: "/" + this.removeNameSpace(type.typeName) + "(" + itemKey + ")",
+            type: type.typeName
+          };
+        return item;
       };
-
-      return item;
-    },
-
-    getUri: function (entityPath) {
-      var serviceUrl = "/";
-      return serviceUrl + entityPath;
-    },
-
-    loadServiceMetadata: function (metadataXml) {
     }
   };
 })();
