@@ -1,78 +1,81 @@
 /*globals module*/
-module.exports = (function () {
+module.exports = (function (edm) {
   "use strict";
 
-  var edm = require("./edm.js"),
-
-      segmentType = {
-        ServiceRoot: "ServiceRoot",
+  var segmentType = {
         Collection: "Collection",
+        Count: "Count",
+        RawValue: "RawValue",
         CollectionItem: "CollectionItem",
         Property: "Property",
-        NavigationProperty: "NavigationProperty"
+        NavigationProperty: "NavigationProperty",
+        Unknown: "Unknown"
       },
 
-      isServiceRoot = function (segments) {
-        return (segments.length === 1 && segments[0] === "");
-      },
+      getParsedSegments = function (segments) {
+        var filteredSegments = segments.filter(
+          function (segment) {
+            return segment !== "";
+          }),
 
-      isCollection = function (segments) {
-        return (segments[0] in edm.getEntitySets());
-      },
+        parseError = false,
 
-      getSegments = function (urlPath) {
-        var url_segments = urlPath.split("/").splice(1),
-            segments = url_segments.map(function (x) {
-              return {
-                type: undefined,
-                name: undefined
-              };
-            });
-        
-        if (isServiceRoot(segments)) {
+        isCollection = function (segment) {
+          return (segment === "Products");
+        },
 
+        isCount = function (segment) {
+          return (segment === "$count");
+        },
+
+        isRawValue = function (segment) {
+          retuen (segment === "$value");
+        };
+
+    return filteredSegments.reduce(function (previous, current) {
+      var previousSegmentParsed,
+          thisSegmentParsed = {
+            type: segmentType.Unknown,
+            segment: current,
+            error: false
+          };
+
+      if (current.length > 0) {
+        previousSegmentParsed = previous[previous.length];
+      }
+
+      if (isCollection(current)) {
+        thisSegmentParsed.type = segmentType.Collection;
+        if (previousSegmentParsed) {
+          thisSegmentParsed.error = true;
         }
-        else if (isCollection(segments)) {
+      }
 
+      else if (isCount(current)) {
+        thisSegmentParsed.type = segmentType.Count;
+        if (previousSegmentParsed && 
+          previousSegmentParsed.type !== segmentType.Collection) {
+          thisSegmentParsed.error = true;
         }
-        if (url_segments.length === 1 && url_segments[0] === "") {
+      }
 
-        }
-        if (url_segments.length === 2) {
-          if (url_segments[0] === "") {
-            if (url_segments[1] === "") {
-              segments[0].type = type: segmentType.ServiceRoot;
-              return segments;
-            }
-            else if (url_segments[1] in edm.getEntitySets()) {
-              segments[0] = {
-                type: segmentType.Collection,
-                name: url_segments[1]
-              }
-              return segments;
-            }
-          }
-        }
-      },
-      getSegmentType: function (segment, previous) {
-        var collectionItemRegex = /.*\(.*\)$/;
-        if (previous === undefined) {
-          // First segment
+      if (thisSegmentParsed.type === segmentType.Unknown) {
+        thisSegmentParsed.error = true;
+      }
 
-        }
-      };
+      if (thisSegmentParsed.error) {
+        parseError = true;
+      }
+
+      previous.push(thisSegmentParsed);
+      return previous;
+
+    }, [/* Start with empty list */]);
+  };
 
   return {
     segmentType: segmentType,
-    parse: function (path) {
-          error = false;
-
-      return {
-        segments: [
-        ]
-        error: error;
-      }
-    }
+    getParsedSegments: getParsedSegments,
+    parseError: parseError
   };
-
-})();
+})(require("./edm.js"));

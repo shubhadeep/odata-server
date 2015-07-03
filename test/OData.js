@@ -4,93 +4,116 @@ module.exports = (function () {
 
   var db = require("./db.js"),
       edm = require("./edm.js"),
+      odataUri = require("./odata-uri.js"),
       url = require("url");
 
   return {
-    getResourcePathFromUrl: function (urlPath) {
-      if (urlPath.indexOf("/") === 0) {
-        return urlPath.split("/").splice(1).join("/");
-      }
-
-      return urlPath;
-    },
 
     get: function (requestUrl) {
       var urlParts = url.parse(requestUrl, true),
-          resourcePath = this.getResourcePathFromUrl(urlParts.pathname),
-          payload;
-
-      if (resourcePath === "") {
-        payload = this.getEntitySetsPayload();
-      }
-      else if (resourcePath in edm.getEntitySets()) {
-        payload = this.getEntitySetPayload(resourcePath);
-      }
-      else {
-        payload = this.getNotFoundPayload(resourcePath);
-      }
-      return payload;
+          path = urlParts.pathname,
+          processor = this.z.getSegmentProcessor(path);
+          return processor()
     },
 
-    getEntitySetPayload: function (entitySet) {
-      var data = db.getData(),
-          entitySetData = [], // Empty - in case not in DB
-          entityType;
+    z: {
+      getSegmentProcessor: function (urlPath) {
+        var segments = odataUri.parse(urlPath).segments,
+            currentSegment;
 
-      if (entitySet in data) {
-        entitySetData = data[entitySet];
-      }
-
-      entityType = edm.getTypeForEntitySet(entitySet);
-      return this.getBody(entitySetData, entityType);
-    },
-
-    removeNameSpace: function (name) {
-      return name.split(".").pop();
-    },
-
-    getEntitySetsPayload: function () {
-      return {
-        d: {
-          EntitySets: edm.getEntitySetNames()
+        if (segments.error) {
+          return this.notFoundProcessor;
         }
-      };
-    },
 
-    getNotFoundPayload: function (resourcePath) {
-      return {
-        error: {
-          code: "",
-          message: {
-            lang: "en-US", // TODO i18n
-            value: "Resource not found for the segment '" + resourcePath + "'."
+        for (var i = 0; i < segments.length; i++) {
+          currentSegment = segments[i];
+          if (currentSegment.type === odataUri.segmentType.ServiceRoot) {
+            return this.entityListProcessor;
+          }
+          else if (currentSegment.type === odataUri.segmentType.Collection) {
+            return this.collectionProcessor;
           }
         }
-      };
-    },
+        return this.notFoundProcessor;
+      },
 
-    getBody: function (items, type) {
-      var body = {},
-          metadataAdder = this.getMetadataAdder(type);
+      getEntitySetPayload: function (entitySet) {
+        var data = db.getData(),
+            entitySetData,
+            entityType;
 
-      body.d = items.map(metadataAdder, this);
-      console.log(type);
-      return body;
-    },
-
-    getMetadataAdder: function (type) {
-      return function (item) {
-        var itemKey = item[type.key];
-        console.log(type.properties[type.key].type);
-        if (type.properties[type.key].type === "String") {
-          itemKey = "'" + itemKey + "'";
+        if (entitySet in data) {
+          entitySetData = data[entitySet];
         }
-        item.__metadata = {
-            uri: "/" + this.removeNameSpace(type.typeName) + "(" + itemKey + ")",
-            type: type.typeName
-          };
-        return item;
-      };
+        else {
+          entitySetData = []; // Empty - in case not in DB
+        }
+
+        entityType = edm.getTypeForEntitySet(entitySet);
+        return this.getBody(entitySetData, entityType);
+      },
+
+      getBody: function (items, type) {
+        var body = {},
+            metadataAdder = this.getMetadataAdder(type);
+
+        body.d = items.map(metadataAdder, this);
+        console.log(type);
+        return body;
+      },
+
+      getMetadataAdder: function (type) {
+        var _removeNameSpace = function (name) {
+          return name.split(".").pop();
+        };
+
+        return function (item) {
+          var itemKey = item[type.key];
+          if (type.properties[type.key].type === "String") {
+            itemKey = "'" + itemKey + "'";
+          }
+          item.__metadata = {
+              uri: "/" + _removeNameSpace(type.typeName) + "(" + itemKey + ")",
+              type: type.typeName
+            };
+          return item;
+        };
+      },
+
+      entityListProcessor: function () {
+        console.log("entityListProcessor");
+        return {
+          body: {
+            d: {
+              EntitySets: edm.getEntitySetNames()
+            }
+          }
+        };
+      },
+
+      collectionProcessor: function (segments) {
+        var collection = segments[0],
+            payloadGetter = this.getEntitySetPayload;
+
+        return {
+          body: payloadGetter(collectionSegment)
+        };
+      },
+
+      notFoundProcessor: function (segment) {
+        console.log("notFoundProcessor");
+        return {
+          body: {
+            error: {
+              code: "",
+              message: {
+                lang: "en-US", // TODO i18n
+                value: "Resource not found for the segment '" + segment + "'."
+              }
+            }
+          }
+        };
+      }
     }
   };
 })();
