@@ -2,8 +2,21 @@
 (function (port) {
   "use strict";
 
-  var requestListener = function (request, response) {
-        require("./odata-http.js").processODataRequest(request, response);
+  var url = require("url"),
+      faviconPath = "/favicon.ico",
+      faviconResponse = function (response) {
+        response.end();
+      },
+      requestListener = function (request, response) {
+        var path = url.parse(request.url).pathname;
+
+        if (path === faviconPath) {
+          faviconResponse(response);
+        }
+        else {
+          require("./odata-http.js").processODataRequest(request, response);
+        }
+        
       },
 
       onListening = function () {

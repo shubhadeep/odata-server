@@ -7,7 +7,6 @@ module.exports = (function () {
       odataUri = require("./odata-uri.js"),
       url = require("url"),
       notFoundProcessor = function (segment) {
-        console.log("notFoundProcessor");
         return {
           body: {
             error: {
@@ -21,7 +20,6 @@ module.exports = (function () {
         };
       },
       entityListProcessor = function () {
-        console.log("entityListProcessor");
         return {
           body: {
             d: {
@@ -29,47 +27,38 @@ module.exports = (function () {
             }
           }
         };
-      };
-
-  return {
-
-    get: function (requestUrl) {
-      var urlParts = url.parse(requestUrl, true),
-          path = urlParts.pathname,
-          segments = path.split("/"),
-          processor = notFoundProcessor,
-          parsedSegments = odataUri.getParsedSegments(segments);
-          console.log(parsedSegments);
-
-      if (parsedSegments.length === 0) {
-        processor = entityListProcessor; 
-      };
-
-      return processor();
-    },
-
-    z: {
-      getSegmentProcessor: function (urlPath) {
-        var segments = odataUri.parse(urlPath).segments,
-            currentSegment;
-
-        if (segments.error) {
-          return this.notFoundProcessor;
-        }
-
-        for (var i = 0; i < segments.length; i++) {
-          currentSegment = segments[i];
-          if (currentSegment.type === odataUri.segmentType.ServiceRoot) {
-            return this.entityListProcessor;
-          }
-          else if (currentSegment.type === odataUri.segmentType.Collection) {
-            return this.collectionProcessor;
-          }
-        }
-        return this.notFoundProcessor;
       },
 
-      getEntitySetPayload: function (entitySet) {
+      processSegment = function (previous, current) {
+        switch (current.type) {
+          case odataUri.segmentType.Collection: {
+            return getEntitySetPayload(current.segment);
+            break;
+          }
+          case odataUri.segmentType.Property: {
+            break;
+          }
+          default: {
+            console.log("Unexpected Segment: " + current.segment);
+          }
+        }
+        return previous;
+      },
+
+      processAllSegments = function (segments) {
+        return segments.reduce(processSegment, {});
+      },
+
+      getErrorSegment = function (segments) {
+        for (var index in segments) {
+          if (segments[index].type === odataUri.segmentType.Unknown) {
+            return segments[index].segment;
+          }
+        }
+        return false;
+      },
+
+      getEntitySetPayload = function (entitySet) {
         var data = db.getData(),
             entitySetData,
             entityType;
@@ -82,19 +71,18 @@ module.exports = (function () {
         }
 
         entityType = edm.getTypeForEntitySet(entitySet);
-        return this.getBody(entitySetData, entityType);
+        return getBody(entitySetData, entityType);
       },
 
-      getBody: function (items, type) {
+      getBody = function (items, type) {
         var body = {},
-            metadataAdder = this.getMetadataAdder(type);
+            metadataAdder = getMetadataAdder(type);
 
-        body.d = items.map(metadataAdder, this);
-        console.log(type);
+        body.d = items.map(metadataAdder);
         return body;
       },
 
-      getMetadataAdder: function (type) {
+      getMetadataAdder = function (type) {
         var _removeNameSpace = function (name) {
           return name.split(".").pop();
         };
@@ -110,15 +98,29 @@ module.exports = (function () {
             };
           return item;
         };
-      },
+      };
 
-      collectionProcessor: function (segments) {
-        var collection = segments[0],
-            payloadGetter = this.getEntitySetPayload;
+  return {
+    get: function (requestUrl) {
+      var segments = url.parse(requestUrl, true)
+                        .pathname.split("/"),
+          parsedSegments = odataUri.getParsedSegments(segments),
+          errorSegment;
 
-        return {
-          body: payloadGetter(collectionSegment)
-        };
+      console.log("Request path: " + requestUrl + ", Segments: " + JSON.stringify(parsedSegments));
+
+      if (parsedSegments.length === 0) {
+        return entityListProcessor(); 
+      }
+      else {
+        errorSegment = getErrorSegment(parsedSegments);
+
+        if (errorSegment) {
+          return notFoundProcessor(getErrorSegment(parsedSegments));
+        }
+        else {
+          return processAllSegments(parsedSegments);
+        }
       }
     }
   };
