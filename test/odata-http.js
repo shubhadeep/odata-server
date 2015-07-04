@@ -1,8 +1,14 @@
-/*globals module */
+/*globals require module */
 module.exports = (function (odata) {
   "use strict";
 
-  var respondJson = function (data, response, statusCode, debug) {
+  var addHeaders = function (response) {
+        var responseHeaders = {
+              "Content-Type": "application/json;charset=utf-8",
+              "DataServiceVersion": "1.0;",
+              "Cache-Control": "no-cache"
+      },
+      respondJson = function (data, response, statusCode, debug) {
         var jsonSpace;
         if (debug) {
           jsonSpace = "  ";
@@ -12,13 +18,7 @@ module.exports = (function (odata) {
         }
         addHeaders(response);
         response.end(JSON.stringify(data, null, jsonSpace));
-      },
-      addHeaders = function (response) {
-        var responseHeaders = {
-              "Content-Type": "application/json;charset=utf-8",
-              "DataServiceVersion": "1.0;",
-              "Cache-Control": "no-cache"
-            };
+      };
 
         Object.keys(responseHeaders).forEach(function (header) {
           response.setHeader(header, responseHeaders[header]);

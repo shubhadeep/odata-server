@@ -1,4 +1,4 @@
-/*globals module*/
+/*globals require module*/
 module.exports = (function (edm) {
   "use strict";
 
@@ -29,7 +29,7 @@ module.exports = (function (edm) {
         },
 
         isRawValue = function (segment) {
-          retuen (segment === "$value");
+          return (segment === "$value");
         };
 
     return filteredSegments.reduce(function (previous, current) {
@@ -53,7 +53,7 @@ module.exports = (function (edm) {
 
       else if (isCount(current)) {
         thisSegmentParsed.type = segmentType.Count;
-        if (previousSegmentParsed && 
+        if (previousSegmentParsed &&
           previousSegmentParsed.type !== segmentType.Collection) {
           thisSegmentParsed.error = true;
         }
@@ -70,7 +70,7 @@ module.exports = (function (edm) {
       previous.push(thisSegmentParsed);
       return previous;
 
-    }, [/* Start with empty list */]);
+    }, []);/* Start with empty list */
   };
 
   return {

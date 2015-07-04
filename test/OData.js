@@ -1,4 +1,4 @@
-/*globals module require */
+/*globals module require console */
 module.exports = (function () {
   "use strict";
 
@@ -19,6 +19,7 @@ module.exports = (function () {
           }
         };
       },
+
       entityListProcessor = function () {
         return {
           body: {
@@ -33,7 +34,6 @@ module.exports = (function () {
         switch (current.type) {
           case odataUri.segmentType.Collection: {
             return getEntitySetPayload(current.segment);
-            break;
           }
           case odataUri.segmentType.Property: {
             break;
@@ -110,7 +110,7 @@ module.exports = (function () {
       console.log("Request path: " + requestUrl + ", Segments: " + JSON.stringify(parsedSegments));
 
       if (parsedSegments.length === 0) {
-        return entityListProcessor(); 
+        return entityListProcessor();
       }
       else {
         errorSegment = getErrorSegment(parsedSegments);

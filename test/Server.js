@@ -16,7 +16,6 @@
         else {
           require("./odata-http.js").processODataRequest(request, response);
         }
-        
       },
 
       onListening = function () {
