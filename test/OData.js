@@ -5,15 +5,47 @@ module.exports = (function () {
   var db = require("./db.js"),
       edm = require("./edm.js"),
       odataUri = require("./odata-uri.js"),
-      url = require("url");
+      url = require("url"),
+      notFoundProcessor = function (segment) {
+        console.log("notFoundProcessor");
+        return {
+          body: {
+            error: {
+              code: "",
+              message: {
+                lang: "en-US", // TODO i18n
+                value: "Resource not found for the segment '" + segment + "'."
+              }
+            }
+          }
+        };
+      },
+      entityListProcessor = function () {
+        console.log("entityListProcessor");
+        return {
+          body: {
+            d: {
+              EntitySets: edm.getEntitySetNames()
+            }
+          }
+        };
+      };
 
   return {
 
     get: function (requestUrl) {
       var urlParts = url.parse(requestUrl, true),
           path = urlParts.pathname,
-          processor = this.z.getSegmentProcessor(path);
-          return processor()
+          segments = path.split("/"),
+          processor = notFoundProcessor,
+          parsedSegments = odataUri.getParsedSegments(segments);
+          console.log(parsedSegments);
+
+      if (parsedSegments.length === 0) {
+        processor = entityListProcessor; 
+      };
+
+      return processor();
     },
 
     z: {
@@ -80,38 +112,12 @@ module.exports = (function () {
         };
       },
 
-      entityListProcessor: function () {
-        console.log("entityListProcessor");
-        return {
-          body: {
-            d: {
-              EntitySets: edm.getEntitySetNames()
-            }
-          }
-        };
-      },
-
       collectionProcessor: function (segments) {
         var collection = segments[0],
             payloadGetter = this.getEntitySetPayload;
 
         return {
           body: payloadGetter(collectionSegment)
-        };
-      },
-
-      notFoundProcessor: function (segment) {
-        console.log("notFoundProcessor");
-        return {
-          body: {
-            error: {
-              code: "",
-              message: {
-                lang: "en-US", // TODO i18n
-                value: "Resource not found for the segment '" + segment + "'."
-              }
-            }
-          }
         };
       }
     }

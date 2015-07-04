@@ -75,7 +75,6 @@ module.exports = (function (edm) {
 
   return {
     segmentType: segmentType,
-    getParsedSegments: getParsedSegments,
-    parseError: parseError
+    getParsedSegments: getParsedSegments
   };
 })(require("./edm.js"));
