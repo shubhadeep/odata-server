@@ -35,6 +35,10 @@ module.exports = (function () {
           case odataUri.segmentType.Collection: {
             return getEntitySetPayload(current.segment);
           }
+          case odataUri.segmentType.Count: {
+            return previous.d.length;
+            break;
+          }
           case odataUri.segmentType.Property: {
             break;
           }
