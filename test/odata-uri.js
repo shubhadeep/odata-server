@@ -21,7 +21,7 @@ module.exports = (function (edm) {
         parseError = false,
 
         isCollection = function (segment) {
-          return (segment === "Products");
+          return edm.getEntitySetNames().indexOf(segment) > -1;
         },
 
         isCount = function (segment) {
@@ -53,9 +53,13 @@ module.exports = (function (edm) {
 
       else if (isCount(current)) {
         thisSegmentParsed.type = segmentType.Count;
-        if (previousSegmentParsed &&
-          previousSegmentParsed.type !== segmentType.Collection) {
+        if (previous === undefined) {
           thisSegmentParsed.error = true;
+          thisSegmentParsed.segment = "The request URI is not valid, the segment $count cannot be applied to the root of the service.";
+        }
+        else if (previousSegmentParsed && previousSegmentParsed.type !== segmentType.Collection) {
+          thisSegmentParsed.error = true;
+          // TODO handle if prvious is not collection, e.g. singleton, or $value
         }
       }
 

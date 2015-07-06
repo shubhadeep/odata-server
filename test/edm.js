@@ -60,9 +60,11 @@ module.exports = (function (edm) {
     getEntitySets: function () {
       return schema.entityContainer.entitySets;
     },
+
     getEntitySetNames: function () {
       return Object.keys(this.getEntitySets());
     },
+
     getTypeForEntitySet: function (entitySet) {
       var entitySets = this.getEntitySets(),
           entityTypeKey = entitySets[entitySet].entityType,
@@ -71,10 +73,12 @@ module.exports = (function (edm) {
       entityType.typeName = entityTypeKey;
       return entityType;
     },
+
     removeNameSpace: function (name) {
       return name.split(".").pop();
     }
   };
+
 })({
   Int32: "Int32",
   String: "String"

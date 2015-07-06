@@ -8,13 +8,11 @@ module.exports = (function () {
       url = require("url"),
       notFoundProcessor = function (segment) {
         return {
-          body: {
-            error: {
-              code: "",
-              message: {
-                lang: "en-US", // TODO i18n
-                value: "Resource not found for the segment '" + segment + "'."
-              }
+          error: {
+            code: "",
+            message: {
+              lang: "en-US", // TODO i18n
+              value: "Resource not found for the segment '" + segment + "'."
             }
           }
         };
@@ -22,10 +20,8 @@ module.exports = (function () {
 
       entityListProcessor = function () {
         return {
-          body: {
-            d: {
-              EntitySets: edm.getEntitySetNames()
-            }
+          d: {
+            EntitySets: edm.getEntitySetNames()
           }
         };
       },
@@ -118,7 +114,6 @@ module.exports = (function () {
       }
       else {
         errorSegment = getErrorSegment(parsedSegments);
-
         if (errorSegment) {
           return notFoundProcessor(getErrorSegment(parsedSegments));
         }
