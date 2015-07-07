@@ -58,7 +58,7 @@ module.exports = (function (odata) {
         statusCode = 404;
         respondJson(data, response, statusCode);
       }
-      else { 
+      else {
         // $count, $value -- what if $value has property 'd'?
         respondText(data.toString(), response);
       }

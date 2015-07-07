@@ -51,7 +51,7 @@ module.exports = (function () {
 
       getErrorSegment = function (segments) {
         for (var index in segments) {
-          if (segments[index].type === odataUri.segmentType.Unknown) {
+          if (segments[index].error === true || segments[index].type === odataUri.segmentType.Unknown) {
             return segments[index].segment;
           }
         }

@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <style>
+      body>div {float: left;}
+      error {color: red;}
+    </style>
+  </head>
+  <body>
+    <script>
+    (function (testUrls) {
+      var currentIndex = 0;
+
+      function renderTest() {
+        if (testUrls.length > 0 && currentIndex < testUrls.length) {
+          console.log("Testing: " + testUrls[currentIndex]);
+          var div = document.createElement("div"),
+            innerDiv = document.createElement("div"),
+            iframe = document.createElement("iframe");
+
+          innerDiv.innerText = testUrls[currentIndex];
+          iframe.setAttribute("src", testUrls[currentIndex]);
+
+          iframe.addEventListener("load", function () {
+            currentIndex = currentIndex + 1;
+            renderTest();
+          });
+          
+          iframe.addEventListener("error", function () {
+            console.error("********** Failed ***********");
+            innerDiv.setAttribute("class", "error");
+          });
+
+          div.appendChild(innerDiv);
+          div.appendChild(iframe);
+          document.body.appendChild(div); 
+        }
+      }
+
+      renderTest();
+    })([
+        "http://localhost:8000/",
+        "http://localhost:8000/Products",
+        "http://localhost:8000/Products/$count",
+        "http://localhost:8000/Categories",
+        "http://localhost:8000/Categories/$count",
+        "http://localhost:8000/NonExistent",
+        "http://localhost:8000/$count"
+      ]);
+    </script>
+  </body>
+</html>
