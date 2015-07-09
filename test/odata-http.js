@@ -51,6 +51,9 @@ module.exports = (function (odata) {
       var data = odata.get(request.url),
           statusCode;
 
+      if (data === undefined) {
+        console.log("Error with URL: " + request.url);
+      }
       if (data.d) {
         respondJson(data, response, statusCode);
       }
@@ -58,7 +61,7 @@ module.exports = (function (odata) {
         statusCode = 404;
         respondJson(data, response, statusCode);
       }
-      else {
+      else { 
         // $count, $value -- what if $value has property 'd'?
         respondText(data.toString(), response);
       }

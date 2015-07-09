@@ -52,7 +52,7 @@ module.exports = (function (edm) {
           console.log(arguments);
           if (previous.length === 0) {
             thisSegmentParsed.error = true;
-            thisSegmentParsed.segment = errorStrings.CountAsRootError;
+            thisSegmentParsed.errorMessage = errorStrings.CountAsRootError;
           }
           else if (previousSegmentParsed && previousSegmentParsed.type !== segmentType.Collection) {
             thisSegmentParsed.error = true;

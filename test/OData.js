@@ -11,16 +11,17 @@ module.exports = (function () {
         ResourceNotFound: "Resource not found for the segment '%s'."
       },
 
-      notFoundProcessor = function (segment, language, code) {
+      notFoundProcessor = function (segment, errorMessage, language, code) {
         var language = language || "en-US",
-            code = code || "";
+            code = code || "",
+            errorMessage = errorMessage || util.format(errorMessages.ResourceNotFound, segment);
 
         return {
           error: {
             code: code,
             message: {
               lang: language,
-              value: util.format(errorMessages.ResourceNotFound, segment)
+              value: errorMessage
             }
           }
         };
@@ -35,12 +36,21 @@ module.exports = (function () {
       },
 
       getErrorSegment = function (segments) {
+        var error = {
+              hasError: false,
+              segment: "",
+              errorMessage: ""
+            };
+
         for (var index in segments) {
-          if (segments[index].error === true || segments[index].type === odataUri.segmentType.Unknown) {
-            return segments[index].segment;
+          error.hasError = segments[index].error;
+          if (error.hasError) {
+            error.segment = segments[index].segment;
+            error.errorMessage = segments[index].errorMessage;
+            break;
           }
         }
-        return false;
+        return error;
       },
 
       getMetadataAdder = function (type) {
@@ -123,8 +133,8 @@ module.exports = (function () {
       }
 
       errorSegment = getErrorSegment(parsedSegments);
-      if (errorSegment) {
-        return notFoundProcessor(getErrorSegment(parsedSegments));
+      if (errorSegment.hasError) {
+        return notFoundProcessor(errorSegment.segment, errorSegment.errorMessage);
       }
 
       return processAllSegments(parsedSegments);
