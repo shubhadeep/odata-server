@@ -2,17 +2,25 @@
 module.exports = (function () {
   "use strict";
 
-  var db = require("./db.js"),
+  var util = require("util"),
+      url = require("url"),
+      db = require("./db.js"),
       edm = require("./edm.js"),
       odataUri = require("./odata-uri.js"),
-      url = require("url"),
-      notFoundProcessor = function (segment) {
+      errorMessages = {
+        ResourceNotFound: "Resource not found for the segment '%s'."
+      },
+
+      notFoundProcessor = function (segment, language, code) {
+        var language = language || "en-US",
+            code = code || "";
+
         return {
           error: {
-            code: "",
+            code: code,
             message: {
-              lang: "en-US", // TODO i18n
-              value: "Resource not found for the segment '" + segment + "'."
+              lang: language,
+              value: util.format(errorMessages.ResourceNotFound, segment)
             }
           }
         };
