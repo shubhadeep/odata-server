@@ -1,4 +1,5 @@
 /*globals require console */
+/*eslint-disable no-console */
 (function (port) {
   "use strict";
 

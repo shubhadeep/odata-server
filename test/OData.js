@@ -26,29 +26,6 @@ module.exports = (function () {
         };
       },
 
-      processSegment = function (previous, current) {
-        switch (current.type) {
-          case odataUri.segmentType.Collection: {
-            return getEntitySetPayload(current.segment);
-          }
-          case odataUri.segmentType.Count: {
-            return previous.d.length;
-            break;
-          }
-          case odataUri.segmentType.Property: {
-            break;
-          }
-          default: {
-            console.log("Unexpected Segment: " + current.segment);
-          }
-        }
-        return previous;
-      },
-
-      processAllSegments = function (segments) {
-        return segments.reduce(processSegment, {});
-      },
-
       getErrorSegment = function (segments) {
         for (var index in segments) {
           if (segments[index].error === true || segments[index].type === odataUri.segmentType.Unknown) {
@@ -57,6 +34,33 @@ module.exports = (function () {
         }
         return false;
       },
+
+      getMetadataAdder = function (type) {
+        var removeNameSpace = function (name) {
+          return name.split(".").pop();
+        };
+
+        return function (item) {
+          var itemKey = item[type.key];
+          if (type.properties[type.key].type === "String") {
+            itemKey = "'" + itemKey + "'";
+          }
+          item.__metadata = {
+              uri: "/" + removeNameSpace(type.typeName) + "(" + itemKey + ")",
+              type: type.typeName
+            };
+          return item;
+        };
+      },
+
+      getBody = function (items, type) {
+        var body = {},
+            metadataAdder = getMetadataAdder(type);
+
+        body.d = items.map(metadataAdder);
+        return body;
+      },
+
 
       getEntitySetPayload = function (entitySet) {
         var data = db.getData(),
@@ -74,30 +78,26 @@ module.exports = (function () {
         return getBody(entitySetData, entityType);
       },
 
-      getBody = function (items, type) {
-        var body = {},
-            metadataAdder = getMetadataAdder(type);
-
-        body.d = items.map(metadataAdder);
-        return body;
+      processSegment = function (previous, current) {
+        switch (current.type) {
+          case odataUri.segmentType.Collection: {
+            return getEntitySetPayload(current.segment);
+          }
+          case odataUri.segmentType.Count: {
+            return previous.d.length;
+          }
+          case odataUri.segmentType.Property: {
+            break;
+          }
+          default: {
+            console.log("Unexpected Segment: " + current.segment);
+          }
+        }
+        return previous;
       },
 
-      getMetadataAdder = function (type) {
-        var _removeNameSpace = function (name) {
-          return name.split(".").pop();
-        };
-
-        return function (item) {
-          var itemKey = item[type.key];
-          if (type.properties[type.key].type === "String") {
-            itemKey = "'" + itemKey + "'";
-          }
-          item.__metadata = {
-              uri: "/" + _removeNameSpace(type.typeName) + "(" + itemKey + ")",
-              type: type.typeName
-            };
-          return item;
-        };
+      processAllSegments = function (segments) {
+        return segments.reduce(processSegment, {});
       };
 
   return {
