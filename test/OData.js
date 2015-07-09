@@ -105,22 +105,21 @@ module.exports = (function () {
       var segments = url.parse(requestUrl, true)
                         .pathname.split("/"),
           parsedSegments = odataUri.getParsedSegments(segments),
+          isEmptySegment = (parsedSegments.length === 0),
           errorSegment;
 
       console.log("Request path: " + requestUrl + ", Segments: " + JSON.stringify(parsedSegments));
 
-      if (parsedSegments.length === 0) {
+      if (isEmptySegment) {
         return entityListProcessor();
       }
-      else {
-        errorSegment = getErrorSegment(parsedSegments);
-        if (errorSegment) {
-          return notFoundProcessor(getErrorSegment(parsedSegments));
-        }
-        else {
-          return processAllSegments(parsedSegments);
-        }
+
+      errorSegment = getErrorSegment(parsedSegments);
+      if (errorSegment) {
+        return notFoundProcessor(getErrorSegment(parsedSegments));
       }
+
+      return processAllSegments(parsedSegments);
     }
   };
 })();
