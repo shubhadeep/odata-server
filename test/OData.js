@@ -58,10 +58,10 @@ module.exports = (function (db, edm, util, odataUri) {
         return function (item) {
           var itemKey = item[type.key];
           if (type.properties[type.key].type === "String") {
-            itemKey = "'" + itemKey + "'";
+            itemKey = util.format("'%s'", itemKey);
           }
           item.__metadata = {
-              uri: "/" + removeNameSpace(type.typeName) + "(" + itemKey + ")",
+              uri: util.format("/%s(%s)", removeNameSpace(type.typeName), itemKey),
               type: type.typeName
             };
           return item;
@@ -76,20 +76,22 @@ module.exports = (function (db, edm, util, odataUri) {
         return body;
       },
 
-      getEntitySetPayload = function (entitySet, model, database) {
+      getEntitySetData = function (entitySet, database) {
         var data = database.getData(),
-            entitySetData,
-            entityType;
-
+            entitySetData = []; // Empty - in case not in DB
+        
         if (entitySet in data) {
           entitySetData = data[entitySet];
         }
-        else {
-          entitySetData = []; // Empty - in case not in DB
-        }
 
-        entityType = model.getTypeForEntitySet(entitySet);
-        return getBody(entitySetData, entityType);
+        return entitySetData;
+      },
+
+      getEntitySetPayload = function (entitySet, model, database) {
+        var entitySetData = getEntitySetData(entitySet, database),
+            entityTypeInfo = model.getTypeForEntitySet(entitySet);
+
+        return getBody(entitySetData, entityTypeInfo);
       },
 
       processSegment = function (previous, current) {
