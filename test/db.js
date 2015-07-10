@@ -1,8 +1,6 @@
 /*globals module require */
-module.exports = (function () {
+module.exports = (function (dbData) {
   "use strict";
-
-  var dbData = require("./v2/data.json");
 
   return {
     getData: function () {
@@ -14,4 +12,4 @@ module.exports = (function () {
     }
 
   };
-})();
+})(require("./v2/data.json"));

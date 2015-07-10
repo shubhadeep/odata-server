@@ -1,5 +1,5 @@
 /*globals require module*/
-module.exports = (function (edm) {
+module.exports = (function () {
   "use strict";
 
   var segmentType = {
@@ -16,8 +16,9 @@ module.exports = (function (edm) {
         CountAsRootError: "The request URI is not valid, the segment $count cannot be applied to the root of the service."
       },
 
-      isCollection = function (segment) {
-        return edm.getEntitySetNames().indexOf(segment) > -1;
+      isCollection = function (segment, model) {
+        return model.getEntitySetNames()
+                    .indexOf(segment) > -1;
       },
 
       isCount = function (segment) {
@@ -28,40 +29,48 @@ module.exports = (function (edm) {
         return (segment === "$value");
       },
 
+      getSegmentType = function (segment, model) {
+        var type = segmentType.Unknown;
+
+        if (isCollection(segment, model)) {
+          type = segmentType.Collection;
+        }
+        else if (isCount(segment)) {
+          type = segmentType.Count;
+        }
+        else if (isRawValue(segment)) {
+          type = segmentType.RawValue;
+        }
+
+        return type;
+      },
+
       parseSegments = function (previous, current) {
         var previousSegmentParsed,
             thisSegmentParsed = {
-              type: segmentType.Unknown,
+              type: getSegmentType(current, this.model),
               segment: current,
               error: false
             };
 
-        if (current.length > 0) {
-          previousSegmentParsed = previous[previous.length];
-        }
-
-        if (isCollection(current)) {
-          thisSegmentParsed.type = segmentType.Collection;
-          if (previousSegmentParsed) {
+        switch (thisSegmentParsed.type) {
+          case segmentType.Collection:
+            if (previousSegmentParsed) {
+              thisSegmentParsed.error = true;
+            }
+            break;
+          case segmentType.Count:
+            if (previous.length === 0) {
+              thisSegmentParsed.error = true;
+              thisSegmentParsed.errorMessage = errorStrings.CountAsRootError;
+            }
+            else if (previousSegmentParsed && previousSegmentParsed.type !== segmentType.Collection) {
+              thisSegmentParsed.error = true;
+              // TODO handle if prvious is not collection, e.g. singleton, or $value
+            }
+            break;
+          case segmentType.Unknown:
             thisSegmentParsed.error = true;
-          }
-        }
-
-        else if (isCount(current)) {
-          thisSegmentParsed.type = segmentType.Count;
-          console.log(arguments);
-          if (previous.length === 0) {
-            thisSegmentParsed.error = true;
-            thisSegmentParsed.errorMessage = errorStrings.CountAsRootError;
-          }
-          else if (previousSegmentParsed && previousSegmentParsed.type !== segmentType.Collection) {
-            thisSegmentParsed.error = true;
-            // TODO handle if prvious is not collection, e.g. singleton, or $value
-          }
-        }
-
-        if (thisSegmentParsed.type === segmentType.Unknown) {
-          thisSegmentParsed.error = true;
         }
 
         previous.push(thisSegmentParsed);
@@ -69,18 +78,22 @@ module.exports = (function (edm) {
 
       },
 
-      getParsedSegments = function (segments) {
+      getParsedSegments = function (segments, model) {
         var filteredSegments = segments.filter(
               function (segment) {
                 return segment !== "";
               }),
+
             initialSegments = [];
 
-        return filteredSegments.reduce(parseSegments, initialSegments);
+        return filteredSegments.reduce(
+          parseSegments.bind({
+            model: model
+          }), initialSegments);
       };
 
     return {
       segmentType: segmentType,
       getParsedSegments: getParsedSegments
     };
-})(require("./edm.js"));
+})();

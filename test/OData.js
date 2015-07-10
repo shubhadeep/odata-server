@@ -1,19 +1,16 @@
 /*globals module require console */
-module.exports = (function () {
+module.exports = (function (db, edm, util, odataUri) {
   "use strict";
 
   var util = require("util"),
       url = require("url"),
-      db = require("./db.js"),
-      edm = require("./edm.js"),
-      odataUri = require("./odata-uri.js"),
       errorMessages = {
         ResourceNotFound: "Resource not found for the segment '%s'."
       },
 
-      notFoundProcessor = function (segment, errorMessage, language, code) {
+      notFoundProcessor = function (segment, errorMessage, language, errorCode) {
         var language = language || "en-US",
-            code = code || "",
+            code = errorCode || "",
             errorMessage = errorMessage || util.format(errorMessages.ResourceNotFound, segment);
 
         return {
@@ -27,10 +24,10 @@ module.exports = (function () {
         };
       },
 
-      entityListProcessor = function () {
+      entityListProcessor = function (model) {
         return {
           d: {
-            EntitySets: edm.getEntitySetNames()
+            EntitySets: model.getEntitySetNames()
           }
         };
       },
@@ -79,9 +76,8 @@ module.exports = (function () {
         return body;
       },
 
-
-      getEntitySetPayload = function (entitySet) {
-        var data = db.getData(),
+      getEntitySetPayload = function (entitySet, model, database) {
+        var data = database.getData(),
             entitySetData,
             entityType;
 
@@ -92,14 +88,14 @@ module.exports = (function () {
           entitySetData = []; // Empty - in case not in DB
         }
 
-        entityType = edm.getTypeForEntitySet(entitySet);
+        entityType = model.getTypeForEntitySet(entitySet);
         return getBody(entitySetData, entityType);
       },
 
       processSegment = function (previous, current) {
         switch (current.type) {
           case odataUri.segmentType.Collection: {
-            return getEntitySetPayload(current.segment);
+            return getEntitySetPayload(current.segment, edm, db);
           }
           case odataUri.segmentType.Count: {
             return previous.d.length;
@@ -108,7 +104,7 @@ module.exports = (function () {
             break;
           }
           default: {
-            console.log("Unexpected Segment: " + current.segment);
+            console.log(util.format("Unexpected Segment: %s", current.segment));
           }
         }
         return previous;
@@ -116,20 +112,24 @@ module.exports = (function () {
 
       processAllSegments = function (segments) {
         return segments.reduce(processSegment, {});
-      };
+      },
 
-  return {
-    get: function (requestUrl) {
+      get = function (requestUrl) {
       var segments = url.parse(requestUrl, true)
                         .pathname.split("/"),
-          parsedSegments = odataUri.getParsedSegments(segments),
+          parsedSegments = odataUri.getParsedSegments(segments, edm),
           isEmptySegment = (parsedSegments.length === 0),
           errorSegment;
 
-      console.log("Request path: " + requestUrl + ", Segments: " + JSON.stringify(parsedSegments));
+      console.log(
+        util.format("Request path: %s, Segments: %s",
+          requestUrl,
+          JSON.stringify(parsedSegments)
+          )
+        );
 
       if (isEmptySegment) {
-        return entityListProcessor();
+        return entityListProcessor(edm);
       }
 
       errorSegment = getErrorSegment(parsedSegments);
@@ -138,6 +138,13 @@ module.exports = (function () {
       }
 
       return processAllSegments(parsedSegments);
-    }
+    };
+
+  return {
+    get: get
   };
-})();
+
+})(require("./db.js"),
+   require("./edm.js"),
+   require("util"),
+   require("./odata-uri.js"));

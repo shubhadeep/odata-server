@@ -1,8 +1,8 @@
 /*globals module*/
-module.exports = (function (edm) {
+module.exports = (function (edmx) {
   "use strict";
 
-  var Edm = edm,
+  var Edm = edmx,
       schema = {
         namespace: "ODataDemo",
         entityTypes: {
