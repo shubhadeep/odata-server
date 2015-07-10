@@ -12,36 +12,38 @@ module.exports = (function (odata) {
         Text: "text/plain;charset=utf-8"
       },
 
-      addHeaders = function (response, type) {
-        var responseHeaders = {
+      getResponseHeaders = function (type) {
+        var headers = {
               "DataServiceVersion": "1.0;",
-              "Cache-Control": "no-cache"
-          },
-          contentTypeString = contentTypeStrings.JSON;
-
-        Object.keys(responseHeaders).forEach(function (header) {
-          response.setHeader(header, responseHeaders[header]);
-        });
+              "Cache-Control": "no-cache",
+              "Content-Type": contentTypeStrings.JSON
+          };
 
         if (type in contentType) {
-          contentTypeString = contentTypeStrings[type];
+          headers["Content-Type"] = contentTypeStrings[type];
         }
+        return headers;
+      },
 
-        response.setHeader("Content-Type", contentTypeString);
+      addHeaders = function (response, headers) {
+        Object.keys(headers).forEach(function (header) {
+          response.setHeader(header, headers[header]);
+        });
       },
 
       respondJson = function (data, response, statusCode, debug) {
-        var jsonSpace = debug? "  ": jsonSpace;
+        var jsonSpace = debug? "  ": jsonSpace,
+            headers = getResponseHeaders();
 
         if (statusCode) {
           response.statusCode = statusCode;
         }
-        addHeaders(response);
+        addHeaders(response, headers);
         response.end(JSON.stringify(data, null, jsonSpace));
       },
 
       respondText = function (data, response) {
-        addHeaders(response, contentType.Text);
+        addHeaders(response, getResponseHeaders(contentType.Text));
         response.end(data);
       };
 
