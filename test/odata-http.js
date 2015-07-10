@@ -7,33 +7,32 @@ module.exports = (function (odata) {
         Text: "Text"
       },
 
+      contentTypeStrings = {
+        JSON: "application/json;charset=utf-8",
+        Text: "text/plain;charset=utf-8"
+      },
+
       addHeaders = function (response, type) {
         var responseHeaders = {
               "DataServiceVersion": "1.0;",
               "Cache-Control": "no-cache"
           },
-          contentTypeString = "application/json;charset=utf-8";
+          contentTypeString = contentTypeStrings.JSON;
 
         Object.keys(responseHeaders).forEach(function (header) {
           response.setHeader(header, responseHeaders[header]);
         });
 
-        switch (type) {
-          case contentType.Text:
-            contentTypeString = "text/plain;charset=utf-8";
-            break;
-          case contentType.JSON:
-            contentTypeString = "application/json;charset=utf-8";
-            break;
+        if (type in contentType) {
+          contentTypeString = contentTypeStrings[type];
         }
+
         response.setHeader("Content-Type", contentTypeString);
       },
 
       respondJson = function (data, response, statusCode, debug) {
-        var jsonSpace;
-        if (debug) {
-          jsonSpace = "  ";
-        }
+        var jsonSpace = debug? "  ": jsonSpace;
+
         if (statusCode) {
           response.statusCode = statusCode;
         }
