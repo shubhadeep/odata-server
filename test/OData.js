@@ -1,5 +1,5 @@
 /*globals module require console */
-module.exports = (function (db, edm, util, odataUri) {
+module.exports = (function (db, edm, odataUri) {
   "use strict";
 
   var util = require("util"),
@@ -9,16 +9,16 @@ module.exports = (function (db, edm, util, odataUri) {
       },
 
       notFoundProcessor = function (segment, errorMessage, language, errorCode) {
-        var language = language || "en-US",
+        var lang = language || "en-US",
             code = errorCode || "",
-            errorMessage = errorMessage || util.format(errorMessages.ResourceNotFound, segment);
+            message = errorMessage || util.format(errorMessages.ResourceNotFound, segment);
 
         return {
           error: {
             code: code,
             message: {
-              lang: language,
-              value: errorMessage
+              lang: lang,
+              value: message
             }
           }
         };
@@ -79,7 +79,7 @@ module.exports = (function (db, edm, util, odataUri) {
       getEntitySetData = function (entitySet, database) {
         var data = database.getData(),
             entitySetData = []; // Empty - in case not in DB
-        
+
         if (entitySet in data) {
           entitySetData = data[entitySet];
         }
@@ -148,5 +148,4 @@ module.exports = (function (db, edm, util, odataUri) {
 
 })(require("./db.js"),
    require("./edm.js"),
-   require("util"),
    require("./odata-uri.js"));

@@ -32,7 +32,7 @@ module.exports = (function (odata) {
       },
 
       respondJson = function (data, response, statusCode, debug) {
-        var jsonSpace = debug? "  ": jsonSpace,
+        var jsonSpace = debug ? "  " : jsonSpace,
             headers = getResponseHeaders();
 
         if (statusCode) {
@@ -62,7 +62,7 @@ module.exports = (function (odata) {
         statusCode = 404;
         respondJson(data, response, statusCode);
       }
-      else { 
+      else {
         // $count, $value -- what if $value has property 'd'?
         respondText(data.toString(), response);
       }
