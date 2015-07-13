@@ -30,7 +30,7 @@ module.exports = (function () {
       },
 
       getSegmentType = function (segment, model) {
-        var type = segmentType.Unknown;
+        var type = segmentType.Unknown; type = x.y;
 
         if (isCollection(segment, model)) {
           type = segmentType.Collection;
