@@ -29,11 +29,25 @@ module.exports = (function () {
         return (segment === "$value");
       },
 
+      getSingleEntityRegex = function (model) {
+        // TODO
+        // Match Collection(value) or Collection(key=value) for any collection
+        // get a list of collection, keyname, keytype and OR the above
+        return new RegExp("^$");
+      },
+
+      isSingleEntity = function (segment, model) {
+        return getSingleEntityRegex(model).test(segment);
+      },
+
       getSegmentType = function (segment, model) {
         var type = segmentType.Unknown;
 
         if (isCollection(segment, model)) {
           type = segmentType.Collection;
+        }
+        if (isSingleEntity(segment, model)) {
+          type = segmentType.CollectionItem;
         }
         else if (isCount(segment)) {
           type = segmentType.Count;
