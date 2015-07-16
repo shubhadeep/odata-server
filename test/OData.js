@@ -76,19 +76,8 @@ module.exports = (function (db, edm, odataUri) {
     return body;
   },
 
-  getEntitySetData = function (entitySet, database) {
-    var data = database.getData(),
-        entitySetData = []; // Empty - in case not in DB
-
-    if (entitySet in data) {
-      entitySetData = data[entitySet];
-    }
-
-    return entitySetData;
-  },
-
   getEntitySetPayload = function (entitySet, model, database) {
-    var entitySetData = getEntitySetData(entitySet, database),
+    var entitySetData = database.getCollection(entitySet),
         entityTypeInfo = model.getTypeForEntitySet(entitySet);
 
     return getBody(entitySetData, entityTypeInfo);
