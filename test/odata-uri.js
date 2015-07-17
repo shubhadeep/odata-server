@@ -2,7 +2,8 @@
 module.exports = (function () {
   "use strict";
 
-  var segmentType = {
+  var util = require("util"),
+      segmentType = {
         Collection: "Collection",
         Count: "Count",
         RawValue: "RawValue",
@@ -13,7 +14,8 @@ module.exports = (function () {
       },
 
       errorStrings = {
-        CountAsRootError: "The request URI is not valid, the segment $count cannot be applied to the root of the service."
+        CountAsRootError: "The request URI is not valid, the segment $count cannot be applied to the root of the service.",
+        CollectionNotLastSegmentError: "The request URI is not valid. Since the segment '%s' refers to a collection, this must be the last segment in the request URI. All intermediate segments must refer to a single resource."
       },
 
       isCollection = function (segment, model) {
@@ -59,19 +61,34 @@ module.exports = (function () {
         return type;
       },
 
+      UpdateCollectionSegmentErrors = function (previousSegmentParsed, thisSegmentParsed) {
+        var errorMessage;
+
+        if (previousSegmentParsed) {
+          thisSegmentParsed.error = true;
+          if (previousSegmentParsed.type === segmentType.Collection) {
+            previousSegmentParsed.error = true;
+            previousSegmentParsed.errorMessage = util.format(errorStrings.CollectionNotLastSegmentError, previousSegmentParsed.segment);
+          }
+        }
+      },
+
+      getLastParsedSegment = function (parsedSegments) {
+        return parsedSegments ? parsedSegments[parsedSegments.length - 1]: undefined
+      },
+
       parseSegments = function (previous, current) {
-        var previousSegmentParsed,
+        var previousSegmentParsed = getLastParsedSegment(previous),
             thisSegmentParsed = {
               type: getSegmentType(current, this.model),
               segment: current,
-              error: false
+              error: false,
+              errorMessage: ""
             };
 
         switch (thisSegmentParsed.type) {
           case segmentType.Collection:
-            if (previousSegmentParsed) {
-              thisSegmentParsed.error = true;
-            }
+            UpdateCollectionSegmentErrors(previousSegmentParsed, thisSegmentParsed);
             break;
           case segmentType.Count:
             if (previous.length === 0) {
