@@ -60,7 +60,7 @@ module.exports = (function (edmx) {
       },
 
       getNameSpace = function (name) {
-        return name.split(".").shift();  
+        return name.split(".").shift();
       };
 
   // TODO Write a converter for metadata.xml to this schema structure.

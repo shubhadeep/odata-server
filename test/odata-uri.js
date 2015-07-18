@@ -1,4 +1,4 @@
-/*globals module*/
+/*globals module require*/
 module.exports = (function () {
   "use strict";
 
@@ -61,7 +61,7 @@ module.exports = (function () {
         return type;
       },
 
-      UpdateCollectionSegmentErrors = function (previousSegmentParsed, thisSegmentParsed) {
+      updateCollectionSegmentErrors = function (previousSegmentParsed, thisSegmentParsed) {
         var errorMessage;
 
         if (previousSegmentParsed) {
@@ -74,7 +74,7 @@ module.exports = (function () {
       },
 
       getLastParsedSegment = function (parsedSegments) {
-        return parsedSegments ? parsedSegments[parsedSegments.length - 1]: undefined
+        return parsedSegments ? parsedSegments[parsedSegments.length - 1] : undefined;
       },
 
       parseSegments = function (previous, current) {
@@ -88,7 +88,7 @@ module.exports = (function () {
 
         switch (thisSegmentParsed.type) {
           case segmentType.Collection:
-            UpdateCollectionSegmentErrors(previousSegmentParsed, thisSegmentParsed);
+            updateCollectionSegmentErrors(previousSegmentParsed, thisSegmentParsed);
             break;
           case segmentType.Count:
             if (previous.length === 0) {
