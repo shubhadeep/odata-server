@@ -51,18 +51,15 @@ module.exports = (function (db, edm, odataUri) {
   },
 
   getMetadataAdder = function (type) {
-    var removeNameSpace = function (name) {
-      return name.split(".").pop();
-    };
-
     return function (item) {
       var itemKey = item[type.key];
       if (type.properties[type.key].type === "String") {
         itemKey = util.format("'%s'", itemKey);
       }
+      console.log(type);
       item.__metadata = {
-          uri: util.format("/%s(%s)", removeNameSpace(type.typeName), itemKey),
-          type: type.typeName
+          uri: util.format("/%s(%s)", type.name, itemKey),
+          type: util.format("%s.%s", type.nameSpace, type.name)
         };
       return item;
     };

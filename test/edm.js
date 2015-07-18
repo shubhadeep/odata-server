@@ -53,6 +53,14 @@ module.exports = (function (edmx) {
             }
           }
         }
+      },
+
+      removeNameSpace = function (name) {
+        return name.split(".").pop();
+      },
+
+      getNameSpace = function (name) {
+        return name.split(".").shift();  
       };
 
   // TODO Write a converter for metadata.xml to this schema structure.
@@ -68,15 +76,14 @@ module.exports = (function (edmx) {
     getTypeForEntitySet: function (entitySet) {
       var entitySets = this.getEntitySets(),
           entityTypeKey = entitySets[entitySet].entityType,
-          entityType = schema.entityTypes[this.removeNameSpace(entityTypeKey)];
+          entityType = schema.entityTypes[removeNameSpace(entityTypeKey)];
 
-      entityType.typeName = entityTypeKey;
+      entityType.name = entityType;
+      entityType.nameSpace = getNameSpace(entityType);
+
       return entityType;
-    },
-
-    removeNameSpace: function (name) {
-      return name.split(".").pop();
     }
+
   };
 
 })({
