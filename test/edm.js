@@ -78,8 +78,8 @@ module.exports = (function (edmx) {
           entityTypeKey = entitySets[entitySet].entityType,
           entityType = schema.entityTypes[removeNameSpace(entityTypeKey)];
 
-      entityType.name = entityType;
-      entityType.nameSpace = getNameSpace(entityType);
+      entityType.name = removeNameSpace(entityTypeKey);
+      entityType.nameSpace = getNameSpace(entityTypeKey);
 
       return entityType;
     }
